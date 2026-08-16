@@ -1,57 +1,59 @@
-# DSH Model Reasoning Helper
+# DSH 模型推理深度助手
 
-A DeepSeek Harness plugin that fixes the missing reasoning-depth selector for custom provider models.
+一个 DeepSeek Harness 插件，用于修复自定义模型缺少“推理深度”选项的问题。
 
-## What It Does
+[English README](./README.en.md)
 
-- Adds a **Model reasoning** section to the DSH web settings page.
-- Shows custom `llm-pi-ai` provider models one by one.
-- Pre-fills conservative mappings for the GPT-5.6 family and OpenAI o-series.
-- Leaves unknown models disabled until the user explicitly enables them.
-- Writes only the selected model's `reasoningEfforts` through `settings.mutate`.
-- Keeps API keys and unrelated provider fields out of the plugin's write path.
+## 功能
 
-The plugin does not probe provider APIs. Reasoning wire values vary between gateways, so unknown models require explicit user confirmation.
+- 在 DSH Web 设置中增加“模型推理”页面。
+- 按 provider 和模型逐项编辑自定义 `llm-pi-ai` 模型。
+- 为 GPT-5.6 系列和 OpenAI o-series 预填保守的推理线值映射。
+- 未知模型默认关闭推理，避免误向不支持的模型发送参数。
+- 只通过 `settings.mutate` 写入当前模型的 `reasoningEfforts`。
+- 不读取、发送或覆盖 API key，也不会修改内置 DeepSeek 适配器行为。
 
-## Install
+插件不会主动探测 provider API。不同网关的推理参数可能不同，未知模型必须由用户确认并填写线值。
 
-From GitHub with the DSH plugin manager:
+## 安装
+
+使用 DSH 插件管理器从 GitHub 安装：
 
 ```bash
 dsh plugin --profile web add github:wtiaw/dsh-model-reasoning-helper
 ```
 
-For a local checkout:
+从本地源码安装：
 
 ```bash
 dsh plugin --profile web add ./dsh-model-reasoning-helper
 ```
 
-Reload the DSH web page after installation, then open **Settings -> Model reasoning**.
+安装后刷新 DSH Web 页面，打开 **设置 -> 模型推理**。
 
-## Usage
+## 使用方法
 
-1. Open **Model reasoning** in settings.
-2. Find the custom provider and model.
-3. Keep the prefilled levels for a known model, or switch an unknown model to **Enabled**.
-4. Check the levels the gateway accepts and edit each wire value when necessary.
-5. Click **Save**.
-6. Open the composer model picker. The model's reasoning-level submenu should now be available.
+1. 打开设置中的“模型推理”。
+2. 找到对应的自定义 provider 和模型。
+3. 已知模型可以直接保留预填等级；未知模型需要切换为“启用”。
+4. 勾选网关实际支持的等级，并按需要修改每个等级的 wire value。
+5. 点击“保存”。
+6. 打开输入框的模型选择器，模型菜单中应出现“推理等级”子菜单。
 
-`gpt-image-2`, ordinary `gpt-4o`, and other unknown models remain disabled by default. This prevents DSH from sending reasoning parameters to a model that may reject them.
+`gpt-image-2`、普通 `gpt-4o` 和其他未知模型默认保持关闭，防止 DSH 发送模型不接受的推理参数。
 
-## Default Mappings
+## 默认映射
 
-The initial catalog contains:
+初始目录包含：
 
-- GPT-5.6 family models: `off: none`, `low`, `medium`, `high`, `xhigh`, and `max`.
-- OpenAI o-series IDs (`o1`, `o3`, `o4-mini` variants): `off: null`, `low`, `medium`, and `high`.
+- GPT-5.6 系列：`off: none`，以及 `low`、`medium`、`high`、`xhigh`、`max`。
+- OpenAI o-series（`o1`、`o3`、`o4-mini` 及其变体）：`off: null`，以及 `low`、`medium`、`high`。
 
-The catalog is intentionally conservative and can be overridden in the settings UI.
+目录有意保持保守，所有映射都可以在设置页面中修改。
 
-## Development
+## 开发与验证
 
-Requirements: Node.js 22 or newer.
+要求 Node.js 22 或更高版本。
 
 ```bash
 npm install
@@ -60,10 +62,10 @@ npm pack --dry-run
 node --input-type=module -e "const m=await import('./client.mjs'); console.log(typeof m.apply)"
 ```
 
-The automated suite covers catalog matching, schema validation, minimal settings mutations, controller revisions, and DSH settings-section lifecycle registration.
+自动化测试覆盖模型目录识别、schema 校验、最小设置变更、revision 并发控制和 DSH 设置区生命周期注册。
 
-## Limitations
+## 限制
 
-- The plugin handles custom provider settings only; built-in DeepSeek models already expose their own reasoning metadata.
-- It cannot guarantee that a third-party gateway accepts the same wire values as the upstream model.
-- A settings conflict requires reloading the page and saving again.
+- 插件只处理自定义 provider；内置 DeepSeek 模型已经由适配器提供推理元数据。
+- 无法保证第三方网关接受与上游模型完全相同的 wire value。
+- 设置发生并发冲突时，需要重新加载页面后再次保存。
